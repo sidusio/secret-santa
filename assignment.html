@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Shows you secret santa assignment">
+    <meta name="viewport" content="width=device-width, initial-scale=0.6">
+    <title>SecretSanta: Assignment</title>
+    <style></style>
+</head>
+<body>
+    <header>
+        <h1>SecretSanta Assignment</h1>
+    </header>
+    <h1>Welcome, <span id="giver-name"></span>!</h1>
+    <h2>Your assignment is:</h2>
+    <h1 id="receiver-name">[Click the button to reveal]</h1>
+    <button id="reveal-button">Reveal Assignment</button>
+    <script>
+        const urlData = new URLSearchParams(window.location.search).get('data');
+        const { giver, receiver } = JSON.parse(atob(urlData));
+
+        const giverNameSpan = document.getElementById('giver-name');
+        const receiverNameSpan = document.getElementById('receiver-name');
+        const revealButton = document.getElementById('reveal-button');
+
+        giverNameSpan.textContent = giver;
+        revealButton.addEventListener('click', () => {
+            receiverNameSpan.textContent = receiver;
+        });
+    </script>
+</body>

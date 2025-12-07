@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Plan your secret santa event">
+    <meta name="viewport" content="width=device-width, initial-scale=0.6">
+    <title>SecretSanta: Plan</title>
+    <style>
+        body {
+            padding: 1rem;
+            height: 100vh;
+            width: 100vw;
+        }
+    </style>
+
+</head>
+
+<body>
+    <header>
+        <h1>Secret Santa Planner</h1>
+        <p>Organize your Secret Santa event with ease!</p>
+    </header>
+    <main>
+        <template id="participant-template">
+            <fieldset class="participant">
+                <legend>Participant</legend>
+                <label>
+                    Participant Name:
+                    <input type="text" name="participant-name" required />
+                </label>
+
+                <label>
+                    Adjustments:
+                    <select name="list-type">
+                        <option value="block" selected>Exclude</option>
+                        <option value="allow">Include only</option>
+                    </select>
+                </label>
+
+                <label>
+                    Participants:
+                    <select multiple class="participant-select" name="participant-list">
+                    </select>
+                </label>
+
+                <button type="button" class="remove-participant">Remove</button>
+            </fieldset>
+        </template>
+        <section>
+            <h2>Create a New Event</h2>
+            <form id="event-form">
+                <button type="button" id="add-participant">Add another Participant</button>
+                <br>
+                <button type="submit">Create Event</button>
+            </form>
+        </section>
+    </main>
+    <script>
+        const template = document.getElementById('participant-template');
+        const form = document.getElementById('event-form');
+        const addParticipantButton = document.getElementById('add-participant');
+
+        const addParticipant = () => {
+            const clone = template.content.cloneNode(true);
+            clone.firstElementChild.dataset.id = document.getElementsByClassName('participant').length;
+            form.insertBefore(clone, addParticipantButton);
+        }
+
+        addParticipant()
+        addParticipant()
+        addParticipant()
+
+        addParticipantButton.addEventListener('click', addParticipant);
+
+        form.addEventListener('click', (event) => {
+            if (event.target.classList.contains('remove-participant')) {
+                event.target.parentElement.remove();
+            }
+        });
+
+        /** @returns {Array<{id: string, name: string, allowList: string[], blockList: string[]}>} */
+        const participantData = () => {
+            const participants = Array.from(document.getElementsByClassName('participant'));
+            return participants.map(p => {
+                const id = p.dataset.id;
+                const name = p.querySelector('input[name="participant-name"]').value;
+                const listType = p.querySelector('select[name="list-type"]').value
+                const participantList = Array.from(p.querySelector('select[name="participant-list"]').selectedOptions).map(o => o.value);
+                return {
+                    id,
+                    name,
+                    allowList: listType === 'allow' ? participantList : [],
+                    blockList: listType === 'block' ? participantList : [],
+                };
+            }).sort((a, b) => a.id - b.id);
+        };
+
+        const updateParticipantOptions = () => {
+            const participants = participantData();
+            const selects = form.querySelectorAll('select.participant-select');
+
+            selects.forEach(select => {
+                const currentSelections = Array.from(select.selectedOptions).map(o => o.value);
+                select.innerHTML = '';
+
+                participants.forEach(p => {
+                    if (p.id === select.parentElement.parentElement.dataset.id) {
+                        return
+                    }
+                    const option = document.createElement('option');
+                    option.value = p.id;
+                    option.textContent = p.name;
+                    if (currentSelections.includes(p.id)) {
+                        option.selected = true;
+                    }
+
+                    select.appendChild(option);
+                });
+            });
+
+            console.log(participants)
+        };
+
+        form.addEventListener('input', (event) => {
+            if (event.target.name === 'participant-name') {
+                updateParticipantOptions();
+            }
+        });
+        new MutationObserver(updateParticipantOptions).observe(form, { childList: true });
+
+        /** 
+         * @param {Array<{id: string, name: string, allowList: string[], blockList: string[]}>} participants 
+         * @returns {Map<string, string[]>} 
+         */
+        const adjacencyMap = (participants) => {
+            const map = new Map();
+            participants.forEach(p => {
+                if (p.allowList.length !== 0) {
+                    map.set(p.id, p.allowList);
+                    return;
+                }
+
+                map.set(p.id, participants
+                    .map(pt => pt.id)
+                    .filter(id => id !== p.id)
+                    .filter(id => !p.blockList.includes(id))
+                );
+            });
+            return map;
+        };
+
+        /** 
+         * @param {Array} array 
+         * @returns {Array} 
+         */
+        const shuffle = (array) => {
+            const result = [...array]; // Create a copy
+            for (let i = result.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [result[i], result[j]] = [result[j], result[i]]; // Swap
+            }
+            return result;
+        }
+
+        /** 
+         * @param {Map<string, string[]>} adjMap 
+         * @returns {string[] | null} 
+         */
+        const findRandomHamiltonianCycle = (adjMap) => {
+            const nodes = Array.from(adjMap.keys());
+            const path = [];
+
+            const visit = (node) => {
+                path.push(node);
+                if (path.length === nodes.length) {
+                    if (adjMap.get(node).includes(path[0])) {
+                        return true;
+                    } else {
+                        path.pop();
+                        return false;
+                    }
+                }
+
+                const neighbors = shuffle(adjMap.get(node)
+                    .filter(n => !path.includes(n)));
+
+                for (const neighbor of neighbors) {
+                    if (visit(neighbor)) {
+                        return true;
+                    }
+                }
+
+                path.pop();
+                return false;
+            };
+
+            return visit(nodes[0]) ? path : null;
+        };
+
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const participants = participantData();
+            const adjMap = adjacencyMap(participants);
+            const cycle = findRandomHamiltonianCycle(adjMap);
+
+            if (cycle === null) {
+                alert('No valid assignment found. Please adjust participant lists and try again.');
+                return;
+            }
+
+            const assignments = cycle.map((id, index) => {
+                const giver = participants.find(p => p.id === id);
+                const receiverId = cycle[(index + 1) % cycle.length];
+                const receiver = participants.find(p => p.id === receiverId);
+                return `${giver.name} → ${receiver.name}`;
+            }).join('\n');
+
+            alert(`Assignments:\n\n${assignments}`);
+        });
+    </script>
+</body>
+
+</html>
