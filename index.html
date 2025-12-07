@@ -55,6 +55,23 @@
                 <button type="submit">Create Event</button>
             </form>
         </section>
+        
+        <template id="event-created-template">
+            <h2>Event Created!</h2>
+            <p>Your Secret Santa event has been successfully created.</p>
+            <p>Share the following link with participants to view their assignments:</p>
+            <ul id="assignments-list"></ul>
+        </template>
+        <template id="event-failed-template">
+            <h2>Event Creation Failed</h2>
+            <p>There was an error creating your Secret Santa event. Please try again.</p>
+        </template>
+        <template id="event-assignment-row-template">
+            <li class="assignment-row">
+                <span class="giver-name"></span> → <pre class="assignment-link"></pre>
+            </li>
+        </template>
+        <section id="event-results" hidden></section>
     </main>
     <script>
         const template = document.getElementById('participant-template');
@@ -204,19 +221,28 @@
             const adjMap = adjacencyMap(participants);
             const cycle = findRandomHamiltonianCycle(adjMap);
 
+            const results = document.getElementById('event-results');
+            results.innerHTML = '';
             if (cycle === null) {
-                alert('No valid assignment found. Please adjust participant lists and try again.');
+                const template = document.getElementById('event-failed-template');
+                results.appendChild(template.content.cloneNode(true));
+                results.hidden = false;
                 return;
             }
 
-            const assignments = cycle.map((id, index) => {
-                const giver = participants.find(p => p.id === id);
-                const receiverId = cycle[(index + 1) % cycle.length];
-                const receiver = participants.find(p => p.id === receiverId);
-                return `${giver.name} → ${receiver.name}`;
-            }).join('\n');
-
-            alert(`Assignments:\n\n${assignments}`);
+            const template = document.getElementById('event-created-template');
+            results.appendChild(template.content.cloneNode(true));
+            const assignmentsList = results.querySelector('#assignments-list');
+            const assignmentTemplate = document.getElementById('event-assignment-row-template');
+            participants.forEach(giver => {
+                const receiverId = cycle[(cycle.indexOf(giver.id) + 1) % cycle.length];
+                const receiver = participants.find(pt => pt.id === receiverId);
+                const assignmentRow = assignmentTemplate.content.cloneNode(true);
+                assignmentRow.querySelector('.giver-name').textContent = giver.name;
+                assignmentRow.querySelector('.assignment-link').textContent = `${window.location.origin}/assignment?data=${btoa(JSON.stringify({ giver: giver.name, receiver: receiver.name }))}`;
+                assignmentsList.appendChild(assignmentRow);
+            });
+            results.hidden = false;
         });
     </script>
 </body>
