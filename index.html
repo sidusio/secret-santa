@@ -9,8 +9,6 @@
     <style>
         body {
             padding: 1rem;
-            height: 100vh;
-            width: 100vw;
         }
     </style>
 
@@ -31,16 +29,8 @@
                 </label>
 
                 <label>
-                    Adjustments:
-                    <select name="list-type">
-                        <option value="block" selected>Exclude</option>
-                        <option value="allow">Include only</option>
-                    </select>
-                </label>
-
-                <label>
-                    Participants:
-                    <select multiple class="participant-select" name="participant-list">
+                    Cannot give to:
+                    <select multiple class="participant-select" name="block-list">
                     </select>
                 </label>
 
@@ -96,19 +86,17 @@
             }
         });
 
-        /** @returns {Array<{id: string, name: string, allowList: string[], blockList: string[]}>} */
+        /** @returns {Array<{id: string, name: string, blockList: string[]}>} */
         const participantData = () => {
             const participants = Array.from(document.getElementsByClassName('participant'));
             return participants.map(p => {
                 const id = p.dataset.id;
                 const name = p.querySelector('input[name="participant-name"]').value;
-                const listType = p.querySelector('select[name="list-type"]').value
-                const participantList = Array.from(p.querySelector('select[name="participant-list"]').selectedOptions).map(o => o.value);
+                const blockList = Array.from(p.querySelector('select[name="block-list"]').selectedOptions).map(o => o.value);
                 return {
                     id,
                     name,
-                    allowList: listType === 'allow' ? participantList : [],
-                    blockList: listType === 'block' ? participantList : [],
+                    blockList
                 };
             }).sort((a, b) => a.id - b.id);
         };
@@ -147,21 +135,15 @@
         new MutationObserver(updateParticipantOptions).observe(form, { childList: true });
 
         /** 
-         * @param {Array<{id: string, name: string, allowList: string[], blockList: string[]}>} participants 
+         * @param {Array<{id: string, name: string, blockList: string[]}>} participants
          * @returns {Map<string, string[]>} 
          */
         const adjacencyMap = (participants) => {
             const map = new Map();
             participants.forEach(p => {
-                if (p.allowList.length !== 0) {
-                    map.set(p.id, p.allowList);
-                    return;
-                }
-
                 map.set(p.id, participants
                     .map(pt => pt.id)
-                    .filter(id => id !== p.id)
-                    .filter(id => !p.blockList.includes(id))
+                    .filter(id => ![p.id, ...p.blockList].includes(id))
                 );
             });
             return map;
@@ -234,12 +216,17 @@
             results.appendChild(template.content.cloneNode(true));
             const assignmentsList = results.querySelector('#assignments-list');
             const assignmentTemplate = document.getElementById('event-assignment-row-template');
+            const targetLength = participants.map(p => p.name.length).sort((a, b) => b - a).slice(0, 2).reduce((a, b) => a + b);
             participants.forEach(giver => {
                 const receiverId = cycle[(cycle.indexOf(giver.id) + 1) % cycle.length];
                 const receiver = participants.find(pt => pt.id === receiverId);
                 const assignmentRow = assignmentTemplate.content.cloneNode(true);
                 assignmentRow.querySelector('.giver-name').textContent = giver.name;
-                assignmentRow.querySelector('.assignment-link').textContent = `${window.location.origin}/assignment?data=${btoa(JSON.stringify({ giver: giver.name, receiver: receiver.name }))}`;
+                const paddingLength = targetLength - giver.name.length - receiver.name.length;
+                // padding of random caracters
+                const padding = Array.from({ length: paddingLength }, () => Math.random().toString(36).charAt(2)).join('');
+                const data = btoa(JSON.stringify({ g: giver.name, r: receiver.name, p: padding }));
+                assignmentRow.querySelector('.assignment-link').textContent = `${window.location.origin}/assignment?data=${data}`;
                 assignmentsList.appendChild(assignmentRow);
             });
             results.hidden = false;

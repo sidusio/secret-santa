@@ -17,7 +17,7 @@
     <button id="reveal-button">Reveal Assignment</button>
     <script>
         const urlData = new URLSearchParams(window.location.search).get('data');
-        const { giver, receiver } = JSON.parse(atob(urlData));
+        const { g: giver, r: receiver } = JSON.parse(atob(urlData));
 
         const giverNameSpan = document.getElementById('giver-name');
         const receiverNameSpan = document.getElementById('receiver-name');
