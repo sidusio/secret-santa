@@ -59,6 +59,7 @@
         <template id="event-assignment-row-template">
             <li class="assignment-row">
                 <span class="giver-name"></span> → <pre class="assignment-link"></pre>
+                <button class="copy-link">Kopiera Länk</button>
             </li>
         </template>
         <section id="event-results" hidden></section>
@@ -230,6 +231,22 @@
                 assignmentsList.appendChild(assignmentRow);
             });
             results.hidden = false;
+        });
+
+        document.addEventListener('click', (event) => {
+            if (event.target.classList.contains('copy-link')) {
+                const link = event.target.parentElement.querySelector('.assignment-link').textContent;
+                navigator.clipboard.writeText(link)
+                    .then(() => {
+                        event.target.textContent = 'Kopierad!';
+                        setTimeout(() => {
+                            event.target.textContent = 'Kopiera Länk';
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy: ', err);
+                    });
+            }
         });
     </script>
 </body>
