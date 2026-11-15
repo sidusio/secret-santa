@@ -163,6 +163,16 @@
             return result;
         }
 
+        const assignmentLink = (giver, receiver, targetLength) => {
+            const paddingLength = targetLength - giver.length - receiver.length;
+            // padding of random caracters
+            const padding = Array.from({ length: paddingLength }, () => Math.random().toString(36).charAt(2)).join('');
+            const data = btoa(JSON.stringify({ g: giver, r: receiver, p: padding }));
+
+            const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/assignment');
+            return `${baseUrl}?data=${data}`
+        };
+
         /**
          * @param {Map<string, string[]>} adjMap
          * @returns {string[] | null}
@@ -223,11 +233,7 @@
                 const receiver = participants.find(pt => pt.id === receiverId);
                 const assignmentRow = assignmentTemplate.content.cloneNode(true);
                 assignmentRow.querySelector('.giver-name').textContent = giver.name;
-                const paddingLength = targetLength - giver.name.length - receiver.name.length;
-                // padding of random caracters
-                const padding = Array.from({ length: paddingLength }, () => Math.random().toString(36).charAt(2)).join('');
-                const data = btoa(JSON.stringify({ g: giver.name, r: receiver.name, p: padding }));
-                assignmentRow.querySelector('.assignment-link').textContent = `${window.location.origin}/assignment?data=${data}`;
+                assignmentRow.querySelector('.assignment-link').textContent = assignmentLink(giver.name, receiver.name, targetLength);
                 assignmentsList.appendChild(assignmentRow);
             });
             results.hidden = false;
