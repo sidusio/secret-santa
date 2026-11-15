@@ -5,16 +5,81 @@
     <meta name="description" content="Shows you secret santa assignment">
     <meta name="viewport" content="width=device-width, initial-scale=0.6">
     <title>SecretSanta: Assignment</title>
-    <style></style>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        button {
+            padding: 0.7rem 1.3rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            background-color: #4CAF50;
+            border-radius: 20px;
+            margin-top: 1rem;
+            border: none;
+            transition: background-color 0.3s ease;
+            &:hover:not(:disabled) {
+                background-color: #45a049;
+            }
+        }
+
+        header {
+            font-size: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        main {
+            height: 90vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        em {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        p {
+            line-height: 150%;
+        }
+        @media only screen and (max-width: 650px) {
+            main {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            img {
+                width: 50%;
+                height: auto;
+            }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>SecretSanta Assignment</h1>
-    </header>
-    <h1>Welcome, <span id="giver-name"></span>!</h1>
-    <h2>Your assignment is:</h2>
-    <h1 id="receiver-name">[Click the button to reveal]</h1>
-    <button id="reveal-button">Reveal Assignment</button>
+    <main>
+        <div>
+            <img src="https://spaces-cdn.clipsafari.com/0oumv1sk1wp20zkyehoqo4bjbslv">
+        </div>
+        <div>
+            <header>
+                <h1>Secret Santa</h1>
+            </header>
+            <h1>Ho Ho Ho, <span id="giver-name"></span>!</h1>
+            <p>Du får i uppdrag att ge en julklapp till...
+                <br/>
+                <em id="receiver-name">[Klicka på knappen för att visa]</em>
+            </p>
+
+            <button id="reveal-button">Visa vem</button>
+        </div>
+    </main>
+
     <script>
         const urlData = new URLSearchParams(window.location.search).get('data');
         const { g: giver, r: receiver } = JSON.parse(atob(urlData));
@@ -26,6 +91,7 @@
         giverNameSpan.textContent = giver;
         revealButton.addEventListener('click', () => {
             receiverNameSpan.textContent = receiver;
+            revealButton.disabled = true;
         });
     </script>
 </body>

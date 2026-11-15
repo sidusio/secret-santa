@@ -45,7 +45,7 @@
                 <button type="submit">Create Event</button>
             </form>
         </section>
-        
+
         <template id="event-created-template">
             <h2>Event Created!</h2>
             <p>Your Secret Santa event has been successfully created.</p>
@@ -134,9 +134,9 @@
         });
         new MutationObserver(updateParticipantOptions).observe(form, { childList: true });
 
-        /** 
+        /**
          * @param {Array<{id: string, name: string, blockList: string[]}>} participants
-         * @returns {Map<string, string[]>} 
+         * @returns {Map<string, string[]>}
          */
         const adjacencyMap = (participants) => {
             const map = new Map();
@@ -149,9 +149,9 @@
             return map;
         };
 
-        /** 
-         * @param {Array} array 
-         * @returns {Array} 
+        /**
+         * @param {Array} array
+         * @returns {Array}
          */
         const shuffle = (array) => {
             const result = [...array]; // Create a copy
@@ -162,9 +162,9 @@
             return result;
         }
 
-        /** 
-         * @param {Map<string, string[]>} adjMap 
-         * @returns {string[] | null} 
+        /**
+         * @param {Map<string, string[]>} adjMap
+         * @returns {string[] | null}
          */
         const findRandomHamiltonianCycle = (adjMap) => {
             const nodes = Array.from(adjMap.keys());
